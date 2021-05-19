@@ -3,7 +3,6 @@ from threading import Thread
 from math import sqrt
 import numpy as np
 import cv2 as cv
-import glob
 import os
 
 #Extração do vídeo no momento da queda
@@ -74,6 +73,8 @@ def KNNsubtractor():
     # Criação do método de subtração de fundo
     subFundo = cv.createBackgroundSubtractorKNN(history=300,dist2Threshold=500)
 
+    #ellipses_colors = np.random.uniform(255, 0, size=(len(), 3))
+
     while cap.isOpened():
 
         ret,frame = cap.read()
@@ -101,13 +102,15 @@ def KNNsubtractor():
                 ellipse = cv.fitEllipse(max_contorno)
                 (xc,yc),(d1,d2),angulo = ellipse
                     
-                cv.ellipse(frame,ellipse,(0,255,0),3)
-                cv.rectangle(frame, (10, 2), (100,40), (255,255,255), -1)
-                ang = round(angulo,2)
-                cv.putText(frame, str(ang), (15, 15),cv.FONT_HERSHEY_SIMPLEX, 0.7 , (0,0,0))
+                cv.ellipse(frame,ellipse,(0,200,0), 2)
+                label = "Angle : {:.2f}".format(angulo)
+                y = round(yc - d2/2) + 15 if (yc - d2/2) > 30 else yc - d2/2 + 15
+                cv.putText(frame, label, (round(xc),y),cv.FONT_HERSHEY_SIMPLEX, 0.5, (0,200,0), 2)
                 try:
-                    coef_mov = round(sqrt((x2c -xc)**2 + (y2c-yc)**2),2)
-                    cv.putText(frame, str(coef_mov), (15, 32),cv.FONT_HERSHEY_SIMPLEX, 0.7 , (0,0,0))
+                    coef_mov = sqrt((x2c -xc)**2 + (y2c-yc)**2)
+                    label2 = "Coef. de mov.: {:.2f}".format(coef_mov)
+                    y2 = round(yc - d2/2) + 30 if (yc - d2/2) > 30 else yc - d2/2 + 30
+                    cv.putText(frame, label2, (round(xc),y2),cv.FONT_HERSHEY_SIMPLEX, 0.5, (0,200,0), 2)
                 except:
                     pass
                 (x2c,y2c) = (xc,yc)
@@ -145,7 +148,7 @@ def mobilenetSSD():
             "diningtable",  "dog", "horse", "motorbike", "person", 
             "pottedplant", "sheep", "sofa", "train", "tvmonitor"]
                         
-    # Declara a variável que contém o espaço que será preenchido pelo objeto
+    # Declara a variável que define a cor do objeto
     bbox_colors = np.random.uniform(255, 0, size=(len(categories), 3))
 
     # Carrega o video extraído
@@ -153,7 +156,10 @@ def mobilenetSSD():
 
     # Salva a analise utilizando redes neurais
     out = cv.VideoWriter('video-extraido-MNSSD.avi',cv.VideoWriter_fourcc(*'DIVX'),5,(640,412))
-     
+    
+    def med(x,y):
+        return (x + y)/2
+
     # Processamento do video
     while True:
          
@@ -177,7 +183,7 @@ def mobilenetSSD():
             # Saída da rede neural
             neural_network_output = neural_network.forward()
         
-            # Preenche a variável com o espaço ocupado pelo objeto
+            # Avalia classe por classe
             for i in np.arange(0, neural_network_output.shape[2]):
                     
                 confidence = neural_network_output[0, 0, i, 2]
@@ -186,7 +192,8 @@ def mobilenetSSD():
                 if confidence > 0.50:
                         
                     idx = int(neural_network_output[0, 0, i, 1])
-
+                    
+                    # Ignora classes diferentes de pessoa,sofa e cadeira
                     if classes[idx] != 'person' and 'sofa' and 'chair':
                         continue
 
@@ -194,19 +201,28 @@ def mobilenetSSD():
                     [w, h, w, h])
                 
                 
-                    (startX, startY, endX, endY) = bounding_box.astype("int")
+                    (sX, sY, eX, eY) = bounding_box.astype("int")
         
                     label = "{}: {:.2f}%".format(classes[idx], confidence * 100) 
                 
-                    cv.rectangle(frame, (startX, startY), (
-                    endX, endY), bbox_colors[idx], 2)
+                    cv.rectangle(frame, (sX, sY), (
+                    eX, eY), bbox_colors[idx], 2)
                     
                                 
-                    y = startY - 15 if startY - 15 > 15 else startY + 15    
-        
-                    cv.putText(frame, label, (startX, y),cv.FONT_HERSHEY_SIMPLEX, 
+                    y = sY - 15 if sY - 15 > 30 else sY + 15   
+                    cv.putText(frame, label, (sX, y),cv.FONT_HERSHEY_SIMPLEX, 
                     0.5, bbox_colors[idx], 2)
-                
+                    try:
+                        y2 = sY - 30 if sY - 15 > 30 else sY + 30
+                        coef_mov = sqrt((med(sX2,eX2) - med(sX,eX))**2 + (med(sY2,eY2) - med(sY,eY))**2)
+                        label2 = "Coef. de mov.: {:.2f}".format(coef_mov)
+                        cv.putText(frame, label2, (sX, y2),cv.FONT_HERSHEY_SIMPLEX, 
+                    0.5, bbox_colors[idx], 2)
+                    except:
+                        pass
+                    
+                    (sX2,sY2,eX2,eY2) = (sX,sY,eX,eY)
+
                 # Redimensionamento do frame
                 frame = cv.resize(frame, (640,412), interpolation=cv.INTER_NEAREST)
             
