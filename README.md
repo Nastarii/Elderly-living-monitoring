@@ -18,7 +18,7 @@ Power Supply      | 9V Baterry + Plug P4 Male
 Resistors         | 1kΩ and 2kΩ
 
 ## Configure HC-05
-First, it's necessary to configure the sensor HC-05 using these conexions and the file hc05_config.ino:
+First, it's necessary to configure the sensor HC-05 using these connections and the file hc05_config.ino:
 
 Vcc --> 5V
 
@@ -50,3 +50,4 @@ Remove the EN wire to use the module.
 
 The arduino code is avaiable in the file main.ino and the connection diagram is shown in the image below.
 
+![alt text] (https://github.com/Nastarii/Elderly-living-monitoring/blob/main/Pins_connections.png?raw=true)
