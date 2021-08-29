@@ -50,4 +50,5 @@ Remove the EN wire to use the module.
 
 The arduino code is avaiable in the file main.ino and the connection diagram is shown in the image below.
 
-![alt text] (https://github.com/Nastarii/Elderly-living-monitoring/blob/main/Pins_connections.png?raw=true)
+![Pins_connections](https://user-images.githubusercontent.com/76565870/131266401-bd6474ac-76ac-4e51-9163-35cc515d7142.png)
+
