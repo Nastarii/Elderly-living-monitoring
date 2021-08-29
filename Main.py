@@ -12,58 +12,59 @@ import cv2 as cv
 import rrdtool
 import serial
 
-#sudo su
-#rfcomm bind 0 98:D3:71:F6:23:02
-#Inicia a comunicação serial com o Arduino
+#Begin serial comunication with Arduino
 SerialComunication = serial.Serial('/dev/rfcomm0',9600)
 
 
-def main(dados):
+def main(data):
 
-    def receber_serial(dados):
+    def read_serial(data):
 
         while True:
 
-            #Lê os dados do arduino
+            #Read Arduino Data
             serialPrint = str(SerialComunication.readline())
 
-            #Realiza os ajustes dos dados recebidos na serial
+            #Adjust data values
             vals = serialPrint.split(':')
             vals = [float(vals[x]) for x in range(1,11)]
 
-            #Faz o cálculo da aceleração e rotação corporal com os 3 eixos
+            #Get the body rotation and acceleration
             acc = sqrt(vals[2]**2 + vals[3]**2 + vals[4]**2)
             gir = sqrt(vals[5]**2 + vals[6]**2 + vals[7]**2)
+            
+            #Append MPU data into the values list
             vals.append(round(acc,2))
             vals.append(round(gir,2))
             
-            #Passa os dados para serem utilizados em outras linhas de processamento
-            for i in range(len(dados)):
-                dados[i] = vals[i]
+            #Pass data to others threads
+            for i in range(len(data)):
+                data[i] = vals[i]
 
 
-    def atualizar_dados(sensor):
+    def update_data(sensor):
 
         while True:
             
-            #Atualiza os dados dos sensores em no banco de dados RRDTOOL
+            #Update data into the database RRDTool
             rrdtool.update('temp-gas.rrd','N:' + str(sensor[0]) + ':' + str(sensor[1]))
             rrdtool.update('acelerometro.rrd','N:' + str(sensor[2]) + ':' + str(sensor[3]) + ':' + str(sensor[4]) + ':' + str(sensor[10]))
             rrdtool.update('giroscopio.rrd','N:' + str(sensor[5]) + ':' + str(sensor[6]) + ':' + str(sensor[7]) + ':' + str(sensor[11]))
             
             sleep(1)
 
-    #Função com as propriedades básicas dos gráficos
-    def prop(nome,inicio,periodo,fim,titulo,eixoY,altura,largura,minimo,maximo):
-        return [nome,'--start',inicio,'--step',periodo,'--end',fim,'--height='+altura,
-        '--width='+largura,'--title',titulo,'--vertical-label',eixoY,'-N','-l','0','-i','--rigid',
-        '--slope-mode','--color', 'BACK#FFFFFF','-l',minimo,'-u',maximo]
-
-    def grafico_tr():
+    #Graphics properties
+    def properties(name,start,step,end,title,Yaxis,height,width,minimum,maximum):
+        return [name,'--start',start,'--step',step,'--end',end,'--height='+height,
+        '--width='+widht,'--title',title,'--vertical-label',Yaxis,'-N','-i','--rigid',
+        '--slope-mode','--color', 'BACK#FFFFFF','-l',minimum,'-u',maximum]
+    
+    #Create and update this graphics in real time
+    def grafico_rt():
 
         while True:
-            #Cria os gráficos que são atualizados em tempo real
-            rrdtool.graph(prop('ModeloInc.png','now - 12s','1','now','Modelo - Detecção de incêndio', \
+            
+            rrdtool.graph(properties('ModeloInc.png','now - 12s','1','now','Modelo - Detecção de incêndio', \
                     'Temperatura[°C]','220','450','0','65'),
                     '--x-grid', 'SECOND:2:SECOND:2:SECOND:2:0:%X',
                     'DEF:t=temp-gas.rrd:Temperatura:LAST','DEF:g=temp-gas.rrd:Fumaca:LAST',
@@ -86,22 +87,18 @@ def main(dados):
                     'AREA:at#0000FF95:Temperatura',
                     'AREA:trisc#FFFF50:Temperatura de risco detectada',
                     'LINE2:lt#FF000095:Temperatura de risco')
-
-            rrdtool.graph(prop('accMpu.png','now  - 300s','1s','now','','Accelerometro[g]','220','500','0','4'),
+        
+            rrdtool.graph(properties('accMpu.png','now  - 300s','1s','now','','Accelerometro[g]','220','500','0','4'),
                     'DEF:acc=acelerometro.rrd:Acc:AVERAGE',
                     'CDEF:norAcc=acc,1.5,LT,acc,UNKN,IF','CDEF:altAcc=acc,1.5,GT,acc,UNKN,IF',
-                    'LINE2:acc#00BB0095:Dados do acelerometro'#,'LINE2:altAcc#FFFF0095:Possível queda',
-                    #'HRULE:1.5#FF000095:Limiar de risco do accelerômetro'
-                    )
+                    'LINE2:acc#00BB0095:Dados do acelerometro','LINE2:altAcc#FFFF0095:Possível queda',
+                    'HRULE:1.42#FF000095:Limiar de risco do accelerômetro')
 
-            rrdtool.graph(prop('girMpu.png','now  - 300s','1s','now','','Giroscópio[°]','220','500','-10','180'),
+            rrdtool.graph(properties('girMpu.png','now  - 300s','1s','now','','Giroscópio[°]','220','500','-10','180'),
                     'DEF:gir=giroscopio.rrd:Gir:AVERAGE',
-                    #'CDEF:norGir=gir,90,LT,gir,UNKN,IF','CDEF:altGir=gir,90,GT,gir,UNKN,IF',
-                    #'LINE2:norGir#0000FF95:Dados do Giroscópio','LINE2:altGir#FFFF0095:Possível queda'
-                    #'HRULE:90#FF000095:Limiar de risco do giroscópio')
                     'LINE2:gir#0000FF95:Dados do Giroscópio')
 
-            rrdtool.graph(prop('3eAcc.png','now  - 300s','1s','now','Dados do acelerometro','','220','500','-1','3'),
+            rrdtool.graph(properties('3eAcc.png','now  - 300s','1s','now','Dados do acelerometro','','220','500','-1','3'),
                         'DEF:x=acelerometro.rrd:AccX:AVERAGE',
                         'DEF:y=acelerometro.rrd:AccY:AVERAGE',
                         'DEF:z=acelerometro.rrd:AccZ:AVERAGE',
@@ -109,7 +106,7 @@ def main(dados):
                         'LINE2:y#00FF00:Eixo Y',
                         'LINE2:z#0000FF:Eixo Z')
                         
-            rrdtool.graph(prop('3eGir.png','now  - 300s','1s','now','Dados do giroscópio','Ângulo[°]', \
+            rrdtool.graph(properties('3eGir.png','now  - 300s','1s','now','Dados do giroscópio','Ângulo[°]', \
                         '220','500','-360','360'),
                         'DEF:x=giroscopio.rrd:GirX:AVERAGE',
                         'DEF:y=giroscopio.rrd:GirY:AVERAGE',
@@ -120,34 +117,34 @@ def main(dados):
                         
             sleep(2)
 
+    #Last hour data graphic
     def grafico_h():
 
         while True:
-            #Cria o gráfico que realiza o monitoramento da última hora
-            rrdtool.graph(prop('temph.png','now - 1h','1m','now','Monitoramento de temperatura na ultima hora', \
+            rrdtool.graph(properties('temph.png','now - 1h','1m','now','Monitoramento de temperatura na ultima hora', \
                     'Temperatura[°C]','220','800','0','60'),'DEF:t=temp-gas.rrd:Temperatura:AVERAGE',
                     'AREA:t#0000DD85:Temperatura')
             
             sleep(60)
-
+    
+    #Daily data graphic
     def grafico_d():
 
         while True:
-            #Cria o gŕafico que é atualizado diariamente
-            rrdtool.graph(prop('tempDiaria.png','now - 1d','5m','now','Monitoramento Diário de temperatura', \
+            rrdtool.graph(properties('tempDiaria.png','now - 1d','5m','now','Monitoramento Diário de temperatura', \
                     'Temperatura[°C]','220','800','0','60'),'DEF:t=temp-gas.rrd:Temperatura:AVERAGE',
                     'AREA:t#0000DD85:Temperatura')
         
             sleep(300)
 
-    #Inicia as Linhas de processamento das funções contidas na função principal
-    th1 = Thread(target=receber_serial,args=(dados,))
+    #Create threads for each graphic
+    th1 = Thread(target=read_serial,args=(data,))
     th1.start()
 
-    th2 = Thread(target=atualizar_dados,args=(dados,))
+    th2 = Thread(target=update_data,args=(data,))
     th2.start()
 
-    th3 = Thread(target = grafico_tr)
+    th3 = Thread(target = grafico_rt)
     th3.start()
 
     th4 = Thread(target = grafico_h)
@@ -156,90 +153,92 @@ def main(dados):
     th5 = Thread(target = grafico_d)
     th5.start()
 
-#Extração do vídeo no momento da queda
-def extrairVideo(sensor):
+#Video extraction in the fall moment
+def videoExtraction(sensor):
 
-    #Função responsável por salvar as imagens
-    def guardarImg(num):
+    #Accumulate images (Create cache)
+    def accImg(num):
         cv.imwrite(dir + "/frame" + str(num) + '.jpg',frame)
         dirs.append(dir + "/frame" + str(num) + '.jpg')
 
     # Declaração das variáveis necessárias para o funcionamento do programa
-    imgs,dirs,cont1,cont2,num_frame,alter = [],[],0,0,0,False
+    imgs,dirs,cont1,cont2,num_frame,changes = [],[],0,0,0,False
     dir = '/home/lucas/Documentos/Python/Camera'
     df = Dataframe()
     
-    print("Arrumando sistema...")
+    print("Organize sistem...")
     
-    #Remove as imagens de detecções anteriores
+    #Clear images cache
     try:
         for arq in listdir(dir):
             remove(path.join(dir,arq))
     except:
         pass
-    # Inicialização da captura da câmera
-    print("Inicializando Captura da câmera...")
+    
+    print("Booting Camera Capture...")
     cap = cv.VideoCapture(0)
 
-    amostras = 14 #Metade do número de imagens a serem salvas
-
-    # Inicialização da leitura dos vals da câmera
+    samples = 14 #Half images to be stored in cache
+    
+    #Start infinite loop
     while True:
         
-        #Lê a captura frame a frame
+        #read camera frame to frame
         _,frame = cap.read()
 
-        #Redimensionamento do frame
+        #Resizing frame
         frame = cv.resize(frame, (640,412), interpolation=cv.INTER_NEAREST)
         
-        #Salva os dados dos sensores em uma planilha
+        #Save data into csv file
         df.put(list(sensor),num_frame)
 
-        # Se os vals dos sensores estão alterados
-        if sensor[10] > 1.38 or alter == True:    
+        # Set condition with sensor value
+        if sensor[10] > 1.42 or changes == True:    
 
-            alter = True
+            changes = True
 
-            #Guarda 10 frames após detectada a alteração
-            if cont2 < amostras:
+            #Accumulates 14 frames after accident
+            if cont2 < samples:
                 cont2 = cont2 + 1
-                guardarImg(cont1 + cont2)
+                accImg(cont1 + cont2)
             else:
-                print("Compilando as imagens...")
+                print("Compiling images...")
                 break
                     
 
-        # Se não há alterações nos sensores
+        # When the values from sensor are normal
         else:
             cont1 = cont1 + 1
 
-            # Guarda os últimos frames
-            guardarImg(cont1)
-            if cont1 < amostras:
+            # Accumulates 14 frames before changes in sensor value
+            accImg(cont1)
+            
+            if cont1 < samples:
                 pass
             else:
-                remove(dir +"/frame" + str(cont1 - (amostras - 1)) + '.jpg')
+                remove(dir +"/frame" + str(cont1 - (samples - 1)) + '.jpg')
                 dirs.pop(0)
 
         num_frame = num_frame + 1
     
-    # Cria um vídeo com os frames de antes e depois da queda
-    for arquivo in dirs:
-        img = cv.imread(arquivo)
+    # Collect all accumulate image
+    for file in dirs:
+        img = cv.imread(file)
         h ,w, l= img.shape
         tam = (w,h)
         imgs.append(img)
 
-    #Cria uma saida de video
+    #Create a video output
     out = cv.VideoWriter('teste-extraido.mp4',0x31637661,5,tam)
 
-    # Preenche a saída de video com as imagens coletadas
+    # Create a video with the accumulates images
     for x in range(len(imgs)):
         out.write(imgs[x])
-
+        
+    #Release camera capture and the output video
     out.release()
     cap.release()
-    print("Vídeo compilado com sucesso!")
+    print("Sucess to compile the video...")
 
 
     mobilenetSSD(df)
