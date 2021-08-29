@@ -1,6 +1,5 @@
 # Elderly Living Monitoring System
-This project pretend build an system to detect fall and fires in home enviromment, for help elderly living people. Using a microcontroller (Arduino UNO), with some
-sensors attached, the body velocity of the elderly and temperature data will be collected and stored in a database, called RRDTool. These data are sent to a computer,which performs graphical analyses and computer vision techniques, to confirm the results of the sensors.
+This project pretend build an system to detect fall and fires in home enviromment, for help elderly living people. Using a microcontroller (Arduino UNO), with some sensors attached, the body velocity of the elderly and temperature data will be collected and stored in a database, called RRDTool. These data are sent to a computer,which performs graphical analyses and computer vision techniques, to confirm the results of the sensors. All project was made using Ubuntu 20.04 operational system
 
 ## Materials List
 Arduino           | Arduino UNO
@@ -40,15 +39,30 @@ AT+PSWD=1234(Choose the password)
 
 AT+ROLE=0 (Configure to slave mode, i.e, others devices can connect in the HC-05)
 
-AT+ADDR? (Get bluetooth adress and copy it)
+AT+ADDR? (Get bluetooth address and copy it)
 
 All commands are avaiable at https://s3-sa-east-1.amazonaws.com/robocore-lojavirtual/709/HC-05_ATCommandSet.pdf
 
-Remove the EN wire to use the module.
+Remove the EN wire to use the module and use this 2 codes line into the terminal:
+
+sudo su (Get root permission)
+[admin]: (Type your Password)
+rfcomm bind 0 + <bluetooth address> (Connect the module with rfcomm0 port)
 
 ## Set up Arduino
 
 The arduino code is avaiable in the file main.ino and the connection diagram is shown in the image below.
 
 ![Pins_connections](https://user-images.githubusercontent.com/76565870/131266401-bd6474ac-76ac-4e51-9163-35cc515d7142.png)
-
+  
+## Set up Main Code
+  
+  Install any IDE for python and all the libraries with pip or pip3:
+  
+  pip install pyserial
+  
+  pip install numpy
+  
+  pip install opencv
+  
+  pip install rrdtool
