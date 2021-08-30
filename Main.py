@@ -1,8 +1,8 @@
+from os import path,remove,listdir,makedirs
 from centroidtracker import CentroidTracker
 from multiprocessing import Process,Array
 from statistics import median,pstdev
 from collections import defaultdict
-from os import path,remove,listdir
 from dataframe import Dataframe
 from threading import Thread
 from time import sleep
@@ -165,6 +165,8 @@ def videoExtraction(sensor):
     # Declaração das variáveis necessárias para o funcionamento do programa
     imgs,dirs,cont1,cont2,num_frame,changes = [],[],0,0,0,False
     dir = str(pathlib.Path(__file__).parent.resolve()) +'/Camera_cache'
+    if not path.exists(dir):
+        makedirs(dir)
     df = Dataframe()
     
     print("Organize sistem...")
