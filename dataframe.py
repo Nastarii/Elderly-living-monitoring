@@ -1,4 +1,5 @@
 from random import uniform
+from os import makedirs
 from time import sleep
 import pathlib
 import csv
@@ -26,8 +27,10 @@ class Dataframe():
         return self.dic
 
     def get(self):
-
+        
         diret = str(pathlib.Path(__file__).parent.resolve()) +'/Dataframe_cache'
+        makedirs(diret)
+        
         with open(diret + 'Dataframe.csv', 'w') as output:
             writer = csv.writer(output,delimiter=";")
             
