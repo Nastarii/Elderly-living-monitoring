@@ -56,7 +56,7 @@ def main(data):
     #Graphics properties
     def properties(name,start,step,end,title,Yaxis,height,width,minimum,maximum):
         return [name,'--start',start,'--step',step,'--end',end,'--height='+height,
-        '--width='+widht,'--title',title,'--vertical-label',Yaxis,'-N','-i','--rigid',
+        '--width='+width,'--title',title,'--vertical-label',Yaxis,'-N','-i','--rigid',
         '--slope-mode','--color', 'BACK#FFFFFF','-l',minimum,'-u',maximum]
     
     #Create and update this graphics in real time
@@ -479,9 +479,9 @@ def CNTsubtractor(dataframe):
                     for values in angles.values():
 
                         dataframe.insert(list(values))
-                        median = median(values[-11:])
-                        std_dev = pstdev(valuees[-11:])
-                        model = sqrt((median-90)**2 + (std_dev - 40)**2)
+                        med = median(values[-11:])
+                        std_dev = pstdev(values[-11:])
+                        model = sqrt((med-90)**2 + (std_dev - 40)**2)
                         
                         if model <= 50:
                             falls[c] = True
