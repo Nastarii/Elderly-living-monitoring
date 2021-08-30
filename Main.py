@@ -1,15 +1,16 @@
 from centroidtracker import CentroidTracker
-from dataframe import Dataframe
 from multiprocessing import Process,Array
+from statistics import median,pstdev
 from collections import defaultdict
+from os import path,remove,listdir
+from dataframe import Dataframe
 from threading import Thread
 from time import sleep
 from math import sqrt
-from os import path,remove,listdir
-from statistics import median,pstdev
 import numpy as np
 import cv2 as cv
 import rrdtool
+import pathlib
 import serial
 
 #Begin serial comunication with Arduino
@@ -163,7 +164,7 @@ def videoExtraction(sensor):
 
     # Declaração das variáveis necessárias para o funcionamento do programa
     imgs,dirs,cont1,cont2,num_frame,changes = [],[],0,0,0,False
-    dir = '/home/lucas/Documentos/Python/Camera'
+    dir = str(pathlib.Path(__file__).parent.resolve()) +'/Camera'
     df = Dataframe()
     
     print("Organize sistem...")
