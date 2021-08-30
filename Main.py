@@ -248,78 +248,78 @@ def videoExtraction(sensor):
 
 def mobilenetSSD(dataframe):
 
-    def moldura(cor):
-        cv.rectangle(frame, (sX, y2), (sX + 60, sY), cor, -1)
-        cv.rectangle(frame, (sX, sY), (eX, eY), cor, 2)
-        cv.rectangle(frame, (eX, sY + 90), (eX + 85, sY), cor, -1)
-        cv.putText(frame, "pessoa", (sX, y),cv.FONT_HERSHEY_SIMPLEX, 0.5, preto, 2)
-        cv.putText(frame,"precisao",(eX,sY + 15),cv.FONT_HERSHEY_SIMPLEX, 0.5, preto, 2)
-        cv.putText(frame,prec,(eX,sY + 35),cv.FONT_HERSHEY_SIMPLEX, 0.5, preto, 2)
+    def molding(color):
+        cv.rectangle(frame, (sX, y2), (sX + 60, sY), color, -1)
+        cv.rectangle(frame, (sX, sY), (eX, eY), color, 2)
+        cv.rectangle(frame, (eX, sY + 90), (eX + 85, sY), color, -1)
+        cv.putText(frame, "person", (sX, y),cv.FONT_HERSHEY_SIMPLEX, 0.5, black, 2)
+        cv.putText(frame,"precision",(eX,sY + 15),cv.FONT_HERSHEY_SIMPLEX, 0.5, black, 2)
+        cv.putText(frame,prec,(eX,sY + 35),cv.FONT_HERSHEY_SIMPLEX, 0.5, black, 2)
 
-    print("Processando video...")
+    print("Processing video...")
 
-    RESIZED_DIMENSIONS = (300, 300) # Dimensoes que o SSD é treinado
-    IMG_NORM_RATIO = 0.007843 # Define a escala de cinza entre os valores de 0 a 255
+    RESIZED_DIMENSIONS = (300, 300) # Train data dimensions
+    IMG_NORM_RATIO = 0.007843 # Define gray scale ratio
     
-    # Carrega a rede neural pré treinada
+    # Load neural network
     neural_network = cv.dnn.readNetFromCaffe('MobileNetSSD_deploy.prototxt.txt', 
             'MobileNetSSD_deploy.caffemodel')
     
-    # Lista de classes
-    
+    # Classify data
     classes =  ["background", "aeroplane", "bicycle", "bird", "boat", "bottle", 
     "bus", "car", "cat", "chair", "cow", 
     "diningtable",  "dog", "horse", "motorbike", "person", 
     "pottedplant", "sheep", "sofa", "train", "tvmonitor"]
 
-    # Carrega o video extraído
+    # Load the video extracted in the possible fall moment
     cap = cv.VideoCapture('teste-extraido.mp4')
 
-    # Salva a analise utilizando redes neurais
+    # Create the neural network output
     out = cv.VideoWriter('teste-MNSSD.mp4',0x31637661,5,(640,412))
-
+    
+    # Create the centroid object and the dict to upload the dataframe
     ct = CentroidTracker()
     cms = defaultdict()
     for i in range(5):
         cms.update({i:[]})
 
-    # Processamento do video
+    # Processing the video
     while True:
          
-        # Captura frame por frame
+        # Capture each frame
         ret, frame = cap.read() 
 
-        # Se for identificado video prossegue o processamento
+        # if has video continue the capture
         if ret:
             
-            # Captura o tamanho dos frames
+            # Capture the frame length
             (h, w) = frame.shape[:2]
 
-            # Cria um blob, grupo de pixels conectados em um frame binário que possuí propriedades comuns
-            # Preporcessamento do frame para a classificação do modelo de deep learn
+            # Create a blob, pre-processing neural network
             frame_blob = cv.dnn.blobFromImage(cv.resize(frame, RESIZED_DIMENSIONS), 
                             IMG_NORM_RATIO, RESIZED_DIMENSIONS, 127.5)
             
-            # Seleciona a entrada para a rede neural
+            # Select blob input to the neural network
             neural_network.setInput(frame_blob)
         
-            # Saída da rede neural
+            # Get the output
             neural_network_output = neural_network.forward()
 
+            # Get the momentary frame
             num_frame = int(cap.get(cv.CAP_PROP_POS_FRAMES))
             rects = []
 
-            # Avalia classe por classe
+            # Evaluate all classes
             for i in np.arange(0, neural_network_output.shape[2]):
                     
                 confidence = neural_network_output[0, 0, i, 2]
             
-                # Acurácia da detecção deve ser maior de 35% para ser mostrada       
+                # Set the confidence of the detection     
                 if confidence > 0.35:
                         
                     idx = int(neural_network_output[0, 0, i, 1])
                     
-                    # Ignora classes diferentes de pessoa
+                    # Ignore diferents classes
                     if classes[idx] != 'person':
                         continue
 
@@ -333,24 +333,25 @@ def mobilenetSSD(dataframe):
                                 
                     y = sY - 5 if sY - 15 > 30 else sY + 15
                     y2 = sY - 20 if sY - 15 > 30 else sY + 20
-                    moldura(verde)
+                    molding(green)
             
                     objs = ct.update(rects)
                     
+                    #Compare the centroid distance between two frames for each object detected 
                     try:
                         for objectID in objs.keys():
-                            coef_mov = sqrt((objs[objectID][0] - p_objs[objectID][0])**2 + (objs[objectID][1] - p_objs[objectID][1])**2)
+                            cm = sqrt((objs[objectID][0] - p_objs[objectID][0])**2 + (objs[objectID][1] - p_objs[objectID][1])**2)
 
-                            if coef_mov > 60:
-                                moldura(amarelo)
-                                cv.rectangle(frame, (sX, objs[objectID][1] - 15), (eX, objs[objectID][1] + 5), amarelo, -1)
-                                cv.putText(frame, "Possivel Acidente!", (sX + 10,objs[objectID][1]),cv.FONT_HERSHEY_SIMPLEX, 0.5, preto, 2)
+                            if cm > 60:
+                                molding(yellow)
+                                cv.rectangle(frame, (sX, objs[objectID][1] - 15), (eX, objs[objectID][1] + 5), yellow, -1)
+                                cv.putText(frame, "Possible Accident", (sX + 10,objs[objectID][1]),cv.FONT_HERSHEY_SIMPLEX, 0.5, black, 2)
 
-                            if coef_mov != 0:
-                                cms[objectID].append(round(coef_mov,2))
-                                text_cm = "{:.2f} id:{}".format(coef_mov,objectID)
-                                cv.putText(frame,"coef. mov.", (eX,sY + 55),cv.FONT_HERSHEY_SIMPLEX, 0.5, preto, 2)
-                                cv.putText(frame,text_cm, (eX,sY + 75),cv.FONT_HERSHEY_SIMPLEX, 0.5, preto, 2)
+                            if cm != 0:
+                                cms[objectID].append(round(cm,2))
+                                text_cm = "{:.2f} id:{}".format(cm,objectID)
+                                cv.putText(frame,"coef. mov.", (eX,sY + 55),cv.FONT_HERSHEY_SIMPLEX, 0.5, black, 2)
+                                cv.putText(frame,text_cm, (eX,sY + 75),cv.FONT_HERSHEY_SIMPLEX, 0.5, black, 2)
                     except:
                         pass
 
@@ -358,23 +359,23 @@ def mobilenetSSD(dataframe):
                     
             
             try:
-                pessoas_detectadas.append(len(objs))
-                num_pessoas = "Pessoas detectadas: {}".format(len(objs))
-                cv.putText(frame, num_pessoas, (15,397),
-                        cv.FONT_HERSHEY_SIMPLEX, 0.5, preto, 2)
+                num_person.append(len(objs))
+                num_person_frame = "Pessoas detectadas: {}".format(len(objs))
+                cv.putText(frame, num_person_frame, (15,397),
+                        cv.FONT_HERSHEY_SIMPLEX, 0.5, black, 2)
             except:
                 pass
             
             if num_frame == 27:
-                max_ids = max(pessoas_detectadas)
+                max_ids = max(num_person)
                 for i in range(max_ids,5):
                     cms.pop(i,None)
-                for valores in cms.values():
-                    dataframe.insert(list(valores))
+                for value in cms.values():
+                    dataframe.insert(list(value))
                     
                     
                 
-            # Redimensionamento do frame
+            # Resize frame
             frame = cv.resize(frame, (640,412), interpolation=cv.INTER_NEAREST)
         
             out.write(frame)
@@ -387,75 +388,80 @@ def mobilenetSSD(dataframe):
 
 def CNTsubtractor(dataframe):
 
-    def molduraSub(cor):
-        cv.rectangle(frame, (xc, yc - d1 - 15), (xc + 80, yc - d1 + 70), cor, -1)
-        cv.ellipse(frame,ellipse,cor, 2)
+    def secondMolding(color):
+        cv.rectangle(frame, (xc, yc - d1 - 15), (xc + 80, yc - d1 + 70), color, -1)
+        cv.ellipse(frame,ellipse,color, 2)
 
-    angulos = defaultdict()
-    quedas = [False] * max(pessoas_detectadas)
-    for i in range(max(pessoas_detectadas)):
-        angulos.update({i:[]})
+    angles = defaultdict()
+    falls = [False] * max(num_person)
+    for i in range(max(num_person)):
+        angles.update({i:[]})
 
-    # Inicialização da captura do video extraido
+    # Get video extracted
     cap = cv.VideoCapture('teste-extraido.mp4')
 
-    # Salva a analise do método KNN
+    # Create the output for subtraction method
     out = cv.VideoWriter('teste-CNT.mp4',0x31637661,5,(640,412))
 
-    # Criação do método de subtração de fundo
-    subFundo = cv.bgsegm.createBackgroundSubtractorCNT(5,True)
+    # Create method
+    backSub = cv.bgsegm.createBackgroundSubtractorCNT(5,True)
     
     while True:
 
         ret,frame = cap.read()
         
         if ret:
-            # Aplicação de técnicas de pré-processamento 
+            # Pre-processing filters
             blurFrame = cv.GaussianBlur(frame,(5,5),0)
 
-            # Aplicação do métodos de subtração de fundo
-            masc = subFundo.apply(blurFrame)
+            # Apply mask
+            masc = backSub.apply(blurFrame)
 
-            # Detecção de contornos nos objetos identificados 
-            contornos,_ = cv.findContours(masc, cv.RETR_TREE, cv.CHAIN_APPROX_NONE)
+            # Detect contours 
+            contours,_ = cv.findContours(masc, cv.RETR_TREE, cv.CHAIN_APPROX_NONE)
 
-            # Inicialização de uma lista com as áreas dos objetos identificados
+            # Create a list with each object area
             areas = []
 
-            # Adicionando valores a lista areas
-            for contorno in contornos:
-                areas.append(cv.contourArea(contorno))
+            # Fill area list
+            for contour in contours:
+                areas.append(cv.contourArea(contour))
 
             num_frame = int(cap.get(cv.CAP_PROP_POS_FRAMES))
             
-             # Identifica o objeto com maior área e circunscreve o contorno do objeto em uma elipse
+            # Start analysis
             try:
                 
-                if pessoas_detectadas[num_frame] == 0:
-                    pessoas_detectadas[num_frame] = 1
+                # Detect at least 1 object
+                if num_person[num_frame] == 0:
+                    num_person[num_frame] = 1
                 
-                for id_pessoa in range(pessoas_detectadas[num_frame]):
-
+                # For each person
+                for id_person in range(num_person[num_frame]):
+                    
+                    # Area length condition
                     if max(areas) < 220000:
-                        m_area = areas.index(max(areas))
-                        max_contorno = contornos[m_area]
-                        ellipse = cv.fitEllipse(max_contorno)
-                        (xc,yc),(d1,d2),angulo = ellipse
-                        xc,yc,d1,ang = round(xc),round(yc),round(d1),round(angulo,2)
-                        angulos[id_pessoa].append(ang)
                         
-                        if angulo > 80 and angulo < 130:
-                            molduraSub(amarelo)
-                            cv.rectangle(frame,(xc - 85,yc - 15),(xc + 85,yc + 5),amarelo,-1)
-                            cv.putText(frame, "Possivel Acidente!", (xc - 75,yc),cv.FONT_HERSHEY_SIMPLEX, 0.5, preto, 2)
+                        # Get greater area
+                        m_area = areas.index(max(areas))
+                        max_contour = contours[m_area]
+                        ellipse = cv.fitEllipse(max_contour)
+                        (xc,yc),(d1,d2),angle = ellipse
+                        xc,yc,d1,ang = round(xc),round(yc),round(d1),round(angle,2)
+                        angles[id_person].append(ang)
+                        
+                        if angle > 80 and angle < 130:
+                            secondMolding(yellow)
+                            cv.rectangle(frame,(xc - 85,yc - 15),(xc + 85,yc + 5),yellow,-1)
+                            cv.putText(frame, "Possivel Acidente!", (xc - 75,yc),cv.FONT_HERSHEY_SIMPLEX, 0.5, black, 2)
                             
                         else:
-                            molduraSub(verde)
+                            secondMolding(green)
                         
-                        cv.putText(frame, "pessoa", (xc,yc - d1),cv.FONT_HERSHEY_SIMPLEX, 0.5, preto, 2)
-                        cv.putText(frame, str(id_pessoa), (xc,yc - d1 + 20),cv.FONT_HERSHEY_SIMPLEX, 0.5, preto, 2)
-                        cv.putText(frame, "angulo", (xc,yc - d1 + 40),cv.FONT_HERSHEY_SIMPLEX, 0.5, preto, 2)
-                        cv.putText(frame, str(ang), (xc,yc - d1 + 60),cv.FONT_HERSHEY_SIMPLEX, 0.5, preto, 2)
+                        cv.putText(frame, "person", (xc,yc - d1),cv.FONT_HERSHEY_SIMPLEX, 0.5, black, 2)
+                        cv.putText(frame, str(id_person), (xc,yc - d1 + 20),cv.FONT_HERSHEY_SIMPLEX, 0.5, black, 2)
+                        cv.putText(frame, "angle", (xc,yc - d1 + 40),cv.FONT_HERSHEY_SIMPLEX, 0.5, black, 2)
+                        cv.putText(frame, str(ang), (xc,yc - d1 + 60),cv.FONT_HERSHEY_SIMPLEX, 0.5, black, 2)
                             
                         areas[m_area] = 0
 
@@ -470,25 +476,25 @@ def CNTsubtractor(dataframe):
                 c = 0
                 try:
                     
-                    for valores in angulos.values():
+                    for values in angles.values():
 
-                        dataframe.insert(list(valores))
-                        mediana = median(valores[-11:])
-                        desvio_padrao = pstdev(valores[-11:])
-                        modelo = sqrt((mediana-90)**2 + (desvio_padrao - 40)**2)
+                        dataframe.insert(list(values))
+                        median = median(values[-11:])
+                        std_dev = pstdev(valuees[-11:])
+                        model = sqrt((median-90)**2 + (std_dev - 40)**2)
                         
-                        if modelo <= 50:
-                            quedas[c] = True
+                        if model <= 50:
+                            falls[c] = True
                         c = c + 1
                 except:
                     pass
 
-                if any(x for x in quedas) == True:
-                    cv.rectangle(frame,(0,185),(640,205),vermelho,-1)
-                    cv.putText(frame, "Queda detectada!", (280,200),cv.FONT_HERSHEY_SIMPLEX, 0.5, preto, 2)
+                if any(x for x in falls) == True:
+                    cv.rectangle(frame,(0,185),(640,205),red,-1)
+                    cv.putText(frame, "Fall detected", (280,200),cv.FONT_HERSHEY_SIMPLEX, 0.5, black, 2)
                 else:
-                    cv.rectangle(frame,(0,185),(640,205),verde,-1)
-                    cv.putText(frame, "Queda nao detectada!", (280,200),cv.FONT_HERSHEY_SIMPLEX, 0.5, preto, 2)
+                    cv.rectangle(frame,(0,185),(640,205),green,-1)
+                    cv.putText(frame, "Fall not detected", (280,200),cv.FONT_HERSHEY_SIMPLEX, 0.5, black, 2)
                     
             
             frame = cv.resize(frame, (640,412), interpolation=cv.INTER_NEAREST)
@@ -501,14 +507,14 @@ def CNTsubtractor(dataframe):
     out.release()
     cap.release()
     
-    print("Métodos Aplicados...")
+    print("Methods Applied...")
 
 if __name__ == '__main__':
 
-    pessoas_detectadas = []
-    verde,amarelo,vermelho,preto = (0,255,128),(0,255,255),(0,0,255),(0,0,0)
-    #Criando os bancos de dados caso ja não tenham sido criados
-
+    num_person = []
+    green,yellow,red,black = (0,255,128),(0,255,255),(0,0,255),(0,0,0)
+    
+    #Create database
     if not path.isfile('temp-gas.rrd'):
         rrdtool.create('temp-gas.rrd',
                         '--start','now',
@@ -541,10 +547,10 @@ if __name__ == '__main__':
                         'RRA:AVERAGE:0.5:1s:3600s',
                         'RRA:AVERAGE:0.5:1h:1d')
 
-    dados = Array('f',[0]*12)
+    data = Array('f',[0]*12)
  
-    p1 = Process(target= main,args=(dados, ))
+    p1 = Process(target= main,args=(data, ))
     p1.start()
 
-    p2 = Process(target= extrairVideo,args=(dados, ))
+    p2 = Process(target= videoExtraction,args=(data, ))
     p2.start()
