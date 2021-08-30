@@ -56,8 +56,8 @@ The arduino code is avaiable in the file main.ino and the connection diagram is 
 ![Pins_connections](https://user-images.githubusercontent.com/76565870/131266401-bd6474ac-76ac-4e51-9163-35cc515d7142.png)
   
 ## Set up Main Code
-  
-  Install any IDE for python and all the libraries with pip or pip3:
+  python get current dir
+  Install any IDE for python and all libraries with pip or pip3:
   
   pip install pyserial
   
