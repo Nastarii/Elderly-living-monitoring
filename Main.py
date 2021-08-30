@@ -164,7 +164,7 @@ def videoExtraction(sensor):
 
     # Declaração das variáveis necessárias para o funcionamento do programa
     imgs,dirs,cont1,cont2,num_frame,changes = [],[],0,0,0,False
-    dir = str(pathlib.Path(__file__).parent.resolve()) +'/Camera'
+    dir = str(pathlib.Path(__file__).parent.resolve()) +'/Camera_cache'
     df = Dataframe()
     
     print("Organize sistem...")
