@@ -45,8 +45,6 @@ void loop() {
     Serial.println(":");
     
     timer = millis();
-    delay(40);
-    
+    delay(40); 
   }
-
 }
