@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PIBIC 20-21</title>
+    <link rel="stylesheet" href="Sistema.css">
+    <script src="Sistema.js" defer></script>
+</head>
+<header>
+    <div id="bar">
+        <p>PROJETO DE INICIAÇÃO CIÊNTÍFICA</p>
+    </div>
+
+    <nav>
+        <label class="menubt">
+            <span class="icon"></span>
+        </label>
+        <ul class="menu">
+            <li onclick="clk1()"><a>Perfil</a></li>
+            <li onclick="clk2()"><a>Temperatura e Umidade</a></li>
+            <li onclick="clk3()"><a>Aceleração e Rotação</a></li>
+            <li onclick="clk4()"><a>Câmera</a></li>
+        </ul>
+    </nav>
+</header>
+<body>
+    <div id="Perfil">
+        <IMG id="imgPerfil" src="imgPerfil.jpg">
+        <form action="/perfil-dados"method="get">
+        </form>
+        <button id="bt">CRIAR/EDITAR PERFIL</button>
+    </div>
+    <div id="editPerfil">
+        <h2>CONFIGURAÇÃO DE PERFIL</h2>
+        <form action="/perfil-dados" method="post">
+            <div class="nome">
+                <label for="nome">Nome:</label>
+                <input type="text" id="nome" name="usuario_nome">
+            </div>
+            <div class="email">
+                <label for="email">E-mail:</label>
+                <input type="email" id="email" name="usuario_email">
+            </div>
+            <div class="tel">
+                <label for="tel">Telefone</label>
+                <input type="tel" id="tel" name="usuario_tel">
+            </div>
+            <button id="bt2" type="submit">APLICAR</button>
+        </form>
+    </div>
+    <div id="Temp">
+        <h2>DHT11 e MQ-2</h2>
+        <IMG id="img" src="/home/lucas/Documentos/Python/ModeloInc.png" alt="modelo para detecção de incêndio"> 
+        <BR> <BR>
+        <IMG id="img2" src="/home/lucas/Documentos/Python/temph.png" alt="dados diários">
+        <BR> <BR>
+        <IMG id="img3" src="/home/lucas/Documentos/Python/tempDiaria.png" alt="dados mensais">
+    </div>
+    <div id="Acel">
+        <h2>MPU-6050</h2>
+        <IMG id="img4" src="/home/lucas/Documentos/Python/accMpu.png" alt="dados do acelerometro"> 
+        <BR> <BR>
+        <IMG id="img5" src="/home/lucas/Documentos/Python/girMpu.png" alt="dados do giroscópio">
+        <BR> <BR>
+        <IMG id="img6" src="/home/lucas/Documentos/Python/3eAcc.png" alt="dados do acelerometro"> 
+        <BR> <BR>
+        <IMG id="img7" src="/home/lucas/Documentos/Python/3eGir.png" alt="dados do giroscópio">
+    </div>
+    <div id="Cam">
+        <h2>CÂMERA</h2>
+        <video  src="/home/lucas/Documentos/Python/teste-CNT.mp4" width="450" controls autoplay muted loop preload></video>
+        <video  src="/home/lucas/Documentos/Python/teste-MNSSD.mp4" width="450" controls autoplay muted loop preload></video>
+        <video  src="/home/lucas/Documentos/Python/teste-extraido.mp4" width="450" controls autoplay muted loop preload></video>
+        <div id="txt">
+            <h3 id="t1">Método de subtração de fundo</h3>
+            <h3 id="t2">Dados treinados MNSSD</h3>
+            <h3 id="t3">Video da câmera normal</h3>
+        </div>
+    </div>
+</body>
+</html>
