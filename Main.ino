@@ -10,7 +10,7 @@ DHT dht(DHTPIN, DHTTYPE);
 MPU6050 mpu(Wire);
 
 long timer = 0;
-float sensorValue;  //variable to store sensor value
+float gasSensor;
 
 void setup() {
   Serial.begin(9600);
@@ -31,9 +31,9 @@ void loop() {
     float h = dht.readHumidity();
     float t = dht.readTemperature();
     
-    sensorValue = analogRead(MQ2pin); // read analog input pin 0
+    gasSensor = analogRead(MQ2pin);
     Serial.print(":");Serial.print(mpu.getTemp());
-    Serial.print(":"); Serial.print(sensorValue);
+    Serial.print(":"); Serial.print(gasSensor);
     Serial.print(":");Serial.print(mpu.getAccX());
     Serial.print(":");Serial.print(mpu.getAccY());
     Serial.print(":");Serial.print(mpu.getAccZ());
